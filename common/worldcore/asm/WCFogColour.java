@@ -32,11 +32,6 @@ import worldcore.interfaces.IWCFog;
 
 public class WCFogColour implements IClassTransformer
 {
-    private static int fogX, fogZ;
-
-    private static boolean fogInit;
-    private static int fogRGBMultiplier;
-
     @Override
     public byte[] transform(String name, String newname, byte[] bytes)
     {
@@ -155,21 +150,17 @@ public class WCFogColour implements IClassTransformer
     
     public static int getFogBlendColour(World world, float partialRenderTick, int playerX, int playerZ)
     {
-        if (playerX == fogX && playerZ == fogZ && fogInit)
-        {
-            return fogRGBMultiplier;
-        }
-        fogInit = true;
-        
         int distance = Minecraft.getMinecraft().gameSettings.fancyGraphics ? ForgeDummyContainer.blendRanges[Minecraft.getMinecraft().gameSettings.renderDistance] : 0;
         
         int r = 0;
         int g = 0;
         int b = 0;
         
-        int wr = (int)(world.getFogColor(partialRenderTick).xCoord * 255);
-        int wg = (int)(world.getFogColor(partialRenderTick).yCoord * 255);
-        int wb = (int)(world.getFogColor(partialRenderTick).zCoord * 255);
+        float celestialAngle = world.getCelestialAngle(partialRenderTick);
+        
+        int wr = (int)(world.provider.getFogColor(celestialAngle, partialRenderTick).xCoord * 255);
+        int wg = (int)(world.provider.getFogColor(celestialAngle, partialRenderTick).yCoord * 255);
+        int wb = (int)(world.provider.getFogColor(celestialAngle, partialRenderTick).zCoord * 255);
         
         int defaultcolour = (wr << 16) + (wg << 8) + (wb);
         int divider = 0;
@@ -196,13 +187,26 @@ public class WCFogColour implements IClassTransformer
                 divider++;
             }
         }
+        
+        float celestialAngleMultiplier = MathHelper.cos(celestialAngle * (float)Math.PI * 2.0F) * 2.0F + 0.5F;
+
+        if (celestialAngleMultiplier < 0.0F)
+        {
+            celestialAngleMultiplier = 0.0F;
+        }
+
+        if (celestialAngleMultiplier > 1.0F)
+        {
+            celestialAngleMultiplier = 1.0F;
+        }
+        
+        r *= celestialAngleMultiplier;
+        g *= celestialAngleMultiplier;
+        b *= celestialAngleMultiplier;
 
         int multiplier = (r / divider & 255) << 16 | (g / divider & 255) << 8 | b / divider & 255;
 
-        fogX = playerX;
-        fogZ = playerZ;
-        fogRGBMultiplier = multiplier;
-        return fogRGBMultiplier;
+        return multiplier;
     }
     
     public static Vec3 getFogVec(Entity entity, World world, float partialRenderTick)
