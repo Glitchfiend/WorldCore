@@ -1,0 +1,182 @@
+<project name="World Core" basedir="./" default="build">
+	<property environment="env" />
+	<property file="buildspecs.properties" prefix="buildspecs" />
+
+	<property name="mod.minecraftversion" value="1" />
+	<property name="mod.majorversion" value="1" />
+	<property name="mod.tweakversion" value="3" />
+	<property name="mod.version" value="${mod.minecraftversion}.${mod.majorversion}.${mod.tweakversion}" />
+	<condition property="mod.build" value="${env.BUILD_NUMBER}" else="0">
+		<isset property="env.BUILD_NUMBER" />
+	</condition>
+	<property name="mc.version" value="1.6.4" />
+	<property name="forge.version" value="9.11.0.883" />
+
+	<property name="src.dir" value="" />
+	<property name="build.dir" value="build" />
+	<property name="download.dir" value="download" />
+	<property name="dist.dir" value="dist" />
+	<property name="forge.dir" value="${build.dir}/forge" />
+	<property name="mcp.dir" value="${forge.dir}/mcp" />
+
+	<property name="mod.name" value="WorldCore-universal-${mc.version}-${mod.version}.${mod.build}.jar" />
+	<property name="dev.name" value="WorldCore-dev-${mc.version}-${mod.version}.${mod.build}.jar" />
+	<property name="changelog.name" value="WorldCore-changelog-${mc.version}-${mod.version}.${mod.build}.txt" />
+
+	<property name="forge.name" value="minecraftforge-src-${mc.version}-${forge.version}.zip" />
+
+	<!-- Check downloaded dependencies -->
+	<available property="forge-downloaded" file="${download.dir}/${forge.name}" />
+
+	<!-- Check installed dependencies -->
+	<property name="build.dependencies.file" value="${build.dir}/dependencies.properties" />
+	<property prefix="build.dependencies" file="${build.dependencies.file}" />
+	<condition property="forge-installed">
+		<equals arg1="${build.dependencies.forge}" arg2="${forge.version}" />
+	</condition>
+
+	<!-- Make directories -->
+	<mkdir dir="${build.dir}" />
+	<mkdir dir="${download.dir}" />
+	<mkdir dir="${dist.dir}" />
+
+
+	<!-- Targets for downloading dependencies -->
+	<target name="download-forge" unless="forge-downloaded">
+		<get src="http://files.minecraftforge.net/${forge.name}" dest="${download.dir}" usetimestamp="true" />
+	</target>
+
+
+	<!-- Targets for installing dependencies -->
+	<target name="install-forge" depends="download-forge" unless="forge-installed">
+		<echo message="Deleting old Forge" />
+		<delete dir="${forge.dir}" />
+
+		<condition property="installargs" value=" --no-assets" else="">
+			<or>
+				<isset property="env.BUILD_ID" />
+			</or>
+		</condition>
+
+		<echo message="Installing Forge with args '${installargs}'." />
+		<unzip src="${download.dir}/${forge.name}" dest="${forge.dir}/.." />
+		<property name="fml.python.exe" location="${forge.dir}/fml/python/python_fml.exe" />
+		<exec dir="${forge.dir}" executable="${fml.python.exe}" osfamily="windows" failonerror="true">
+			<arg line="install.py${installargs}" />
+		</exec>
+		<exec dir="${forge.dir}" executable="python" osfamily="unix" failonerror="true">
+			<arg line="install.py${installargs}" />
+		</exec>
+
+		<echo message="Updating build.dependencies" />
+		<delete file="${build.dependencies.file}" />
+		<propertyfile file="${build.dependencies.file}">
+			<entry key="forge" value="${forge.version}" />
+		</propertyfile>
+	</target>
+
+	<target name="install-dependencies" depends="install-forge" />
+
+	<!-- Targets for building -->
+	<target name="recompile">
+
+		<!-- Copy source -->
+		<echo message="Copying source" />
+		<copy todir="${mcp.dir}/src/minecraft">
+			<fileset dir="common" />
+		</copy>
+		<copy todir="${mcp.dir}/src/minecraft">
+			<fileset dir="apis" />
+		</copy>
+		<copy todir="${mcp.dir}/reobf/resources">
+			<fileset dir="resources" />
+		</copy>
+
+		<!-- Replace Tokens-->
+		<replace dir="${mcp.dir}/src/minecraft/worldcore" token="@VERSION@" value="${mod.version}" />
+		<replace dir="${mcp.dir}/src/minecraft/worldcore" token="@BUILD_NUMBER@" value="${mod.build}" />
+		<replace dir="${mcp.dir}/src/minecraft/worldcore" token="@MC_VERSION@" value="${mc.version}" />
+		<replace dir="${mcp.dir}/src/minecraft/worldcore" token="1.42.666.42.1" value="9.10.1.871" />
+
+		<replace dir="${mcp.dir}/reobf/resources" token="@VERSION@" value="${mod.version}" />
+		<replace dir="${mcp.dir}/reobf/resources" token="@BUILD_NUMBER@" value="${mod.build}" />
+		<replace dir="${mcp.dir}/reobf/resources" token="@MC_VERSION@" value="${mc.version}" />
+		<replace dir="${mcp.dir}/reobf/resources" token="@FORGE_VERSION@" value="${forge.version}" />
+		
+		<replace dir="" token="@BUILD_NUMBER@" value="${mod.build}" />
+
+		<echo message="Recompiling" />
+		<property name="mcp.python.exe" location="${mcp.dir}/runtime/bin/python/python_mcp.exe" />
+		<exec dir="${mcp.dir}" executable="${mcp.python.exe}" osfamily="windows" resultproperty="recompile.code">
+			<arg line="runtime/recompile.py" />
+		</exec>
+		<exec dir="${mcp.dir}" executable="python" osfamily="unix" resultproperty="recompile.code">
+			<arg line="runtime/recompile.py" />
+		</exec>
+
+		<echo message="Removing source" />
+		<delete includeemptydirs="true">
+			<fileset dir="${mcp.dir}/src/minecraft">
+				<present present="both" targetdir="common" />
+				<present present="both" targetdir="apis" />
+			</fileset>
+		</delete>
+
+		<fail message="Failed to recompile">
+			<condition>
+				<isfailure code="${recompile.code}" />
+			</condition>
+		</fail>
+	</target>
+
+	<target name="reobfuscate">
+		<echo message="Reobfuscating" />
+		<property name="mcp.python.exe" location="${mcp.dir}/runtime/bin/python/python_mcp.exe" />
+		<exec dir="${mcp.dir}" executable="${mcp.python.exe}" osfamily="windows" resultproperty="reobfuscate.code">
+			<arg line="runtime/reobfuscate.py --srgnames" />
+		</exec>
+		<exec dir="${mcp.dir}" executable="python" osfamily="unix" resultproperty="reobfuscate.code">
+			<arg line="runtime/reobfuscate.py --srgnames" />
+		</exec>
+
+		<fail message="Failed to reobfuscate">
+			<condition>
+				<isfailure code="${reobfuscate.code}" />
+			</condition>
+		</fail>
+	</target>
+
+	<target name="package">
+		<echo message="Building Jar" />
+		<mkdir dir="${dist.dir}" />
+
+		<echo message="Packaging WorldCore Universal" />
+		<jar destfile="${dist.dir}/${mod.name}" manifest="${mcp.dir}/reobf/resources/MANIFEST.MF">
+			<fileset dir="${mcp.dir}/reobf/minecraft" includes="**/worldcore/**" />
+			<fileset dir="${mcp.dir}/reobf/resources" excludes="MANIFEST.MF">
+			</fileset>
+		</jar>
+		
+		<copy todir="tmp/src">
+    		<fileset dir="${mcp.dir}/src/minecraft" includes="**/worldcore/**"/>
+ 		</copy>
+
+		<echo message="Packaging WorldCore Dev" />
+		<jar destfile="${dist.dir}/${dev.name}" manifest="${mcp.dir}/reobf/resources/MANIFEST.MF">
+			<fileset dir="tmp" includes="**/src/**" /> 
+			<fileset dir="${mcp.dir}/bin/minecraft" includes="**/worldcore/**" /> 
+			<fileset dir="${mcp.dir}/reobf/resources" excludes="MANIFEST.MF">
+			</fileset>
+		</jar>
+    	
+    	<!-- <echo message="Renaming BiomesOPlenty Changelog" /> -->
+        <!-- <move file="changelog.txt" tofile="${dist.dir}/${changelog.name}"/> -->
+	</target>
+
+	<target name="build">
+		<antcall target="install-dependencies" />
+		<antcall target="recompile" />
+		<antcall target="reobfuscate" />
+		<antcall target="package" />
+	</target>
+</project>
