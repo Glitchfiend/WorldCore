@@ -186,7 +186,7 @@ public class WCFogDistance implements IClassTransformer
         fogX = playerX;
         fogZ = playerZ;
         storedFinalFogCloseness = finalFogCloseness;
-        
+
         if (distance < 0)
         {
             GL11.glFogf(GL11.GL_FOG_START, 0.0F);
@@ -194,8 +194,9 @@ public class WCFogDistance implements IClassTransformer
         }
         else
         {
-            GL11.glFogf(GL11.GL_FOG_START, farPlaneDistance * (finalFogCloseness / 10));
-            GL11.glFogf(GL11.GL_FOG_END, Math.min(farPlaneDistance, 192.0F) * finalFogCloseness);
+            float fogDistance = Math.min(farPlaneDistance, 192.0F * finalFogCloseness);
+            GL11.glFogf(GL11.GL_FOG_START, fogDistance * 0.25F);
+            GL11.glFogf(GL11.GL_FOG_END, fogDistance );
         }
     }
 }
