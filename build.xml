@@ -85,9 +85,7 @@
 		<copy todir="${mcp.dir}/src/minecraft">
 			<fileset dir="common" />
 		</copy>
-		<copy todir="${mcp.dir}/src/minecraft">
-			<fileset dir="apis" />
-		</copy>
+
 		<copy todir="${mcp.dir}/reobf/resources">
 			<fileset dir="resources" />
 		</copy>
