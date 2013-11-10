@@ -66,7 +66,7 @@ public class WCFogDistance implements IClassTransformer
         {
             ListIterator iterator;
             
-            if ((methodNode.name.equals("setupFog")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc).equals("func_78468_a")))
+            if ((methodNode.name.equals("setupFog")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc).equals("func_78468_a"))) //Definate
             {
                 for (iterator = methodNode.instructions.iterator(); iterator.hasNext();) 
                 {
@@ -76,19 +76,23 @@ public class WCFogDistance implements IClassTransformer
                     {
                         FieldInsnNode node = (FieldInsnNode)insnNode;
 
-                        if ((node.name.equals("mc")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(node.owner, node.name, node.desc).equals("field_78531_r")))
+                        if ((node.name.equals("mc")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(node.owner, node.name, node.desc).equals("field_72777_q")))
                         {
+                            System.out.println("Got to mc");
+                            
                             if (node.getNext() instanceof FieldInsnNode)
                             {
                                 FieldInsnNode worldNode = (FieldInsnNode)node.getNext();
 
-                                if ((worldNode.name.equals("theWorld")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(worldNode.owner, worldNode.name, worldNode.desc).equals("field_71441_e")))
+                                if ((worldNode.name.equals("theWorld")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(worldNode.owner, worldNode.name, worldNode.desc).equals("field_75367_f")))
                                 {
+                                    System.out.println("Got to theWorld");
+                                    
                                     if (worldNode.getNext() instanceof FieldInsnNode)
                                     {
                                         FieldInsnNode providerNode = (FieldInsnNode)worldNode.getNext();
 
-                                        if ((providerNode.name.equals("provider")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(providerNode.owner, providerNode.name, providerNode.desc).equals("field_73011_w")))
+                                        if ((providerNode.name.equals("provider")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(providerNode.owner, providerNode.name, providerNode.desc).equals("field_73011_w"))) //Definate
                                         {
                                             if (providerNode.getNext().getOpcode() == ALOAD)
                                             {
