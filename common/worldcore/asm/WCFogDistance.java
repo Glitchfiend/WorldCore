@@ -6,6 +6,7 @@ import static org.objectweb.asm.Opcodes.ILOAD;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 
 import java.util.Iterator;
+import java.util.ListIterator;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -20,11 +21,13 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import worldcore.interfaces.IWCFog;
 
 public class WCFogDistance implements IClassTransformer
@@ -52,84 +55,77 @@ public class WCFogDistance implements IClassTransformer
     
     public static byte[] patchEntityRenderer(String name, byte[] bytes, boolean obfuscated)
     {
-        String targetMethodName = "";
-
-        if (obfuscated)
-            targetMethodName ="a";
-        else
-            targetMethodName ="setupFog";
-
-        ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(bytes);
+        ClassNode classNode = new ClassNode();
+
         classReader.accept(classNode, 0);
 
-        Iterator<MethodNode> methods = classNode.methods.iterator();
+        boolean found = false;
         
-        while (methods.hasNext())
+        for (MethodNode methodNode : classNode.methods)
         {
-            MethodNode m = methods.next();
-            int fdiv_index = -1;
-
-            if (m.name.equals(targetMethodName) && (m.desc.equals("(IF)V")))
+            ListIterator iterator;
+            
+            if ((methodNode.name.equals("setupFog")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc).equals("func_78468_a")))
             {
-                AbstractInsnNode currentNode = null;
-                AbstractInsnNode targetNode = null;
-
-                Iterator<AbstractInsnNode> iter = m.instructions.iterator();
-                
-                int index = -1;
-                int timesFound = 0;
-
-                while (iter.hasNext())
+                for (iterator = methodNode.instructions.iterator(); iterator.hasNext();) 
                 {
-                    index++;
-                    currentNode = iter.next();
+                    AbstractInsnNode insnNode = (AbstractInsnNode)iterator.next();
 
-                    if (currentNode.getOpcode() == ALOAD)
+                    if ((insnNode instanceof FieldInsnNode)) 
                     {
-                        if (timesFound == 22)
+                        FieldInsnNode node = (FieldInsnNode)insnNode;
+
+                        if ((node.name.equals("mc")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(classNode.name, methodNode.name, methodNode.desc).equals("field_78531_r")))
                         {
-                            targetNode = currentNode;
-                            fdiv_index = index;
-                            break;
-                        }
-                        else
-                        {
-                            timesFound++;
+                            if (node.getNext() instanceof FieldInsnNode)
+                            {
+                                FieldInsnNode worldNode = (FieldInsnNode)node.getNext();
+
+                                if ((worldNode.name.equals("theWorld")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(classNode.name, methodNode.name, methodNode.desc).equals("field_71441_e")))
+                                {
+                                    if (worldNode.getNext() instanceof FieldInsnNode)
+                                    {
+                                        FieldInsnNode providerNode = (FieldInsnNode)worldNode.getNext();
+
+                                        if ((providerNode.name.equals("provider")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc).equals("field_73011_w")))
+                                        {
+                                            if (providerNode.getNext().getOpcode() == ALOAD)
+                                            {
+                                                InsnList toInject = new InsnList();
+                                                
+                                                toInject.add(new VarInsnNode(ALOAD, 3));
+                                                toInject.add(new VarInsnNode(ILOAD, 1));
+                                                toInject.add(new VarInsnNode(FLOAD, 6));
+                                                if (obfuscated)
+                                                    toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogDistance", "setBiomeFogDistance", "(Lnn;IF)V"));
+                                                else
+                                                    toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogDistance", "setBiomeFogDistance", "(Lnet/minecraft/entity/Entity;IF)V"));
+                                                
+                                                methodNode.instructions.insertBefore(node.getPrevious(), toInject);
+                                                
+                                                found = true;
+                                                break;
+                                            }                                         
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                
-                /*
-                mv.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glFogf", "(IF)V");
-                mv.visitLabel(l71);
-                mv.visitLineNumber(1922, l71);
-                mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                mv.visitVarInsn(ALOAD, 3);
-                mv.visitVarInsn(FLOAD, 6);
-                mv.visitMethodInsn(INVOKESTATIC, "biomesoplenty/asm/BOPFogDistance", "setBiomeFogDistance", "(Lnet/minecraft/entity/Entity;F)V");
-                mv.visitLabel(l32);
-                */
-                
-                InsnList toInject = new InsnList();
-
-                toInject.add(new VarInsnNode(ALOAD, 3));
-                toInject.add(new VarInsnNode(ILOAD, 1));
-                toInject.add(new VarInsnNode(FLOAD, 6));
-                if (obfuscated)
-                    toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogDistance", "setBiomeFogDistance", "(Lnn;IF)V"));
-                else
-                    toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogDistance", "setBiomeFogDistance", "(Lnet/minecraft/entity/Entity;IF)V"));
-                
-                m.instructions.insertBefore(m.instructions.get(fdiv_index), toInject);
-                
-                break;
             }
+
+            if (found)
+                break;
         }
         
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-        classNode.accept(writer);
-        return writer.toByteArray();
+        if (!found) throw new RuntimeException("setupFog transformer failed"); 
+        
+        ClassWriter classWriter = new ClassWriter(0);
+        classNode.accept(classWriter);
+
+        return classWriter.toByteArray();
     }
     
     public static void setBiomeFogDistance(Entity entity, int distance, float farPlaneDistance)
