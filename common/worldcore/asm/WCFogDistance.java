@@ -78,16 +78,12 @@ public class WCFogDistance implements IClassTransformer
 
                         if ((node.name.equals("mc")) || (node.name.equals("q")))
                         {
-                            System.out.println("Got to mc");
-                            
                             if (node.getNext() instanceof FieldInsnNode)
                             {
                                 FieldInsnNode worldNode = (FieldInsnNode)node.getNext();
 
                                 if ((worldNode.name.equals("theWorld")) || (worldNode.name.equals("f")))
                                 {
-                                    System.out.println("Got to theWorld");
-                                    
                                     if (worldNode.getNext() instanceof FieldInsnNode)
                                     {
                                         FieldInsnNode providerNode = (FieldInsnNode)worldNode.getNext();
