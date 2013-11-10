@@ -65,7 +65,7 @@ public class WCFogColour implements IClassTransformer
         {
             ListIterator iterator;
 
-            if ((methodNode.name.equals("updateFogColor")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc).equals("func_78466_h")))
+            if ((methodNode.name.equals("updateFogColor")) || (methodNode.name.equals("i")))
             {
                 for (iterator = methodNode.instructions.iterator(); iterator.hasNext();) 
                 {
@@ -75,7 +75,7 @@ public class WCFogColour implements IClassTransformer
                     {
                         MethodInsnNode node = (MethodInsnNode)insnNode;
 
-                        if ((node.name.equals("getFogColor")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(node.owner, node.name, node.desc).equals("func_72948_g")))
+                        if ((node.name.equals("getFogColor")) || (node.name.equals("f")))
                         {
                             InsnList toInject = new InsnList();
 

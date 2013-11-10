@@ -66,7 +66,7 @@ public class WCFogDistance implements IClassTransformer
         {
             ListIterator iterator;
             
-            if ((methodNode.name.equals("setupFog")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc).equals("func_78468_a"))) //Definate
+            if ((methodNode.name.equals("setupFog")) || (methodNode.name.equals("a")))
             {
                 for (iterator = methodNode.instructions.iterator(); iterator.hasNext();) 
                 {
@@ -76,7 +76,7 @@ public class WCFogDistance implements IClassTransformer
                     {
                         FieldInsnNode node = (FieldInsnNode)insnNode;
 
-                        if ((node.name.equals("mc")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(node.owner, node.name, node.desc).equals("field_72777_q")))
+                        if ((node.name.equals("mc")) || (node.name.equals("q")))
                         {
                             System.out.println("Got to mc");
                             
@@ -84,7 +84,7 @@ public class WCFogDistance implements IClassTransformer
                             {
                                 FieldInsnNode worldNode = (FieldInsnNode)node.getNext();
 
-                                if ((worldNode.name.equals("theWorld")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(worldNode.owner, worldNode.name, worldNode.desc).equals("field_75367_f")))
+                                if ((worldNode.name.equals("theWorld")) || (worldNode.name.equals("f")))
                                 {
                                     System.out.println("Got to theWorld");
                                     
@@ -92,7 +92,7 @@ public class WCFogDistance implements IClassTransformer
                                     {
                                         FieldInsnNode providerNode = (FieldInsnNode)worldNode.getNext();
 
-                                        if ((providerNode.name.equals("provider")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(providerNode.owner, providerNode.name, providerNode.desc).equals("field_73011_w"))) //Definate
+                                        if ((providerNode.name.equals("provider")) || (providerNode.name.equals("t")))
                                         {
                                             if (providerNode.getNext().getOpcode() == ALOAD)
                                             {
@@ -149,7 +149,7 @@ public class WCFogDistance implements IClassTransformer
             else
             {
                 float fogDistance = Math.min(farPlaneDistance, 192.0F * storedFinalFogCloseness);
-                GL11.glFogf(GL11.GL_FOG_START, fogDistance * 0.25F);
+                GL11.glFogf(GL11.GL_FOG_START, fogDistance * 0.75F);
                 GL11.glFogf(GL11.GL_FOG_END, fogDistance );
             }
             return;
@@ -196,7 +196,7 @@ public class WCFogDistance implements IClassTransformer
         else
         {
             float fogDistance = Math.min(farPlaneDistance, 192.0F * finalFogCloseness);
-            GL11.glFogf(GL11.GL_FOG_START, fogDistance * 0.25F);
+            GL11.glFogf(GL11.GL_FOG_START, fogDistance * 0.75F);
             GL11.glFogf(GL11.GL_FOG_END, fogDistance );
         }
     }
