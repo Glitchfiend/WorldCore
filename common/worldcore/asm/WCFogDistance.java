@@ -76,19 +76,19 @@ public class WCFogDistance implements IClassTransformer
                     {
                         FieldInsnNode node = (FieldInsnNode)insnNode;
 
-                        if ((node.name.equals("mc")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(node.name, node.name, node.desc).equals("field_78531_r")))
+                        if ((node.name.equals("mc")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(node.owner, node.name, node.desc).equals("field_78531_r")))
                         {
                             if (node.getNext() instanceof FieldInsnNode)
                             {
                                 FieldInsnNode worldNode = (FieldInsnNode)node.getNext();
 
-                                if ((worldNode.name.equals("theWorld")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(worldNode.name, worldNode.name, worldNode.desc).equals("field_71441_e")))
+                                if ((worldNode.name.equals("theWorld")) || (FMLDeobfuscatingRemapper.INSTANCE.mapFieldName(worldNode.owner, worldNode.name, worldNode.desc).equals("field_71441_e")))
                                 {
                                     if (worldNode.getNext() instanceof FieldInsnNode)
                                     {
                                         FieldInsnNode providerNode = (FieldInsnNode)worldNode.getNext();
 
-                                        if ((providerNode.name.equals("provider")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(providerNode.name, providerNode.name, providerNode.desc).equals("field_73011_w")))
+                                        if ((providerNode.name.equals("provider")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(providerNode.owner, providerNode.name, providerNode.desc).equals("field_73011_w")))
                                         {
                                             if (providerNode.getNext().getOpcode() == ALOAD)
                                             {
