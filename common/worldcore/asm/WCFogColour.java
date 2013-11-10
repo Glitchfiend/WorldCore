@@ -3,12 +3,14 @@ package worldcore.asm;
 import static org.objectweb.asm.Opcodes.ALOAD;
 import static org.objectweb.asm.Opcodes.ASTORE;
 import static org.objectweb.asm.Opcodes.FLOAD;
+import static org.objectweb.asm.Opcodes.ILOAD;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -23,11 +25,13 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import worldcore.interfaces.IWCFog;
 
 public class WCFogColour implements IClassTransformer
@@ -47,107 +51,79 @@ public class WCFogColour implements IClassTransformer
         
         return bytes;
     }
-    
+
     public static byte[] patchEntityRenderer(String name, byte[] bytes, boolean obfuscated)
     {
-        String targetMethodName = "";
-
-        if (obfuscated)
-            targetMethodName ="i";
-        else
-            targetMethodName ="updateFogColor";
-
-        ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(bytes);
+        ClassNode classNode = new ClassNode();
+
         classReader.accept(classNode, 0);
 
-        Iterator<MethodNode> methods = classNode.methods.iterator();
-        
-        while (methods.hasNext())
+        boolean found = false;
+
+        for (MethodNode methodNode : classNode.methods)
         {
-            MethodNode m = methods.next();
-            int fdiv_index = -1;
+            ListIterator iterator;
 
-            if (m.name.equals(targetMethodName) && (m.desc.equals("(F)V")))
+            if ((methodNode.name.equals("updateFogColor")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc).equals("func_78466_h")))
             {
-                AbstractInsnNode currentNode = null;
-                AbstractInsnNode targetNode = null;
-
-                Iterator<AbstractInsnNode> iter = m.instructions.iterator();
-
-                int index = -1;
-                int timesFound = 0;
-
-                while (iter.hasNext())
+                for (iterator = methodNode.instructions.iterator(); iterator.hasNext();) 
                 {
-                    index++;
-                    currentNode = iter.next();
+                    AbstractInsnNode insnNode = (AbstractInsnNode)iterator.next();
 
-                    if (currentNode.getOpcode() == INVOKEVIRTUAL)
+                    if ((insnNode instanceof MethodInsnNode)) 
                     {
-                        if (timesFound == 1)
+                        MethodInsnNode node = (MethodInsnNode)insnNode;
+
+                        if ((node.name.equals("getFogColor")) || (FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(node.name, node.name, node.desc).equals("func_72948_g")))
                         {
-                            targetNode = currentNode;
-                            fdiv_index = index;
+                            InsnList toInject = new InsnList();
+
+                            toInject.add(new VarInsnNode(ALOAD, 3));
+                            toInject.add(new VarInsnNode(ALOAD, 2));
+                            toInject.add(new VarInsnNode(FLOAD, 1));
+                            if (obfuscated)
+                                toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogColour", "getFogVec", "(Lnn;Labw;F)Latc;"));
+                            else
+                                toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogColour", "getFogVec", "(Lnet/minecraft/entity/Entity;Lnet/minecraft/world/World;F)Lnet/minecraft/util/Vec3;"));
+                            toInject.add(new VarInsnNode(ASTORE, 9));
+
+                            methodNode.instructions.insert(node.getNext(), toInject);
+
+                            List<AbstractInsnNode> remNodes = new ArrayList();
+
+                            AbstractInsnNode currentNode = node.getPrevious().getPrevious();
+
+                            for (int i = -2; i <= 1; i++)
+                            {
+                                remNodes.add(currentNode);
+                                currentNode = currentNode.getNext();
+                            }
+
+                            for (AbstractInsnNode remNode : remNodes)
+                            {
+                                methodNode.instructions.remove(remNode);
+                            }
+
+                            found = true;
                             break;
-                        }
-                        else
-                        {
-                            timesFound++;
                         }
                     }
                 }
-                
-                /*
-                mv.visitLineNumber(1658, l8);
-                mv.visitVarInsn(ALOAD, 3);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKESTATIC, "biomesoplenty/asm/BOPFogColour", "getFogVec", "(Lnet/minecraft/entity/Entity;Lnet/minecraft/world/World;)Lnet/minecraft/util/Vec3;");
-                mv.visitVarInsn(ASTORE, 9);
-                */
-                
-                InsnList toInject = new InsnList();
 
-                toInject.add(new VarInsnNode(ALOAD, 3));
-                toInject.add(new VarInsnNode(ALOAD, 2));
-                toInject.add(new VarInsnNode(FLOAD, 1));
-                if (obfuscated)
-                    toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogColour", "getFogVec", "(Lnn;Labw;F)Latc;"));
-                else
-                    toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCFogColour", "getFogVec", "(Lnet/minecraft/entity/Entity;Lnet/minecraft/world/World;F)Lnet/minecraft/util/Vec3;"));
-                toInject.add(new VarInsnNode(ASTORE, 9));
-                
-                m.instructions.insert(m.instructions.get(fdiv_index + 1), toInject);
-                
-                /*
-                mv.visitLineNumber(1654, l8);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(FLOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "net/minecraft/client/multiplayer/WorldClient", "getFogColor", "(F)Lnet/minecraft/util/Vec3;");
-                mv.visitVarInsn(ASTORE, 9); 
-                 */
-                
-                List<AbstractInsnNode> remNodes = new ArrayList();
-                
-                for (int i = -2; i <= 1; i++)
-                {
-                    remNodes.add(m.instructions.get(fdiv_index + i));
-                }
-                
-                for (AbstractInsnNode remNode : remNodes)
-                {
-                    m.instructions.remove(remNode);
-                }
-
-                break;
+                if (found)
+                    break;
             }
         }
 
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-        classNode.accept(writer);
-        return writer.toByteArray();
+        if (!found) throw new RuntimeException("setupFog transformer failed"); 
+
+        ClassWriter classWriter = new ClassWriter(0);
+        classNode.accept(classWriter);
+
+        return classWriter.toByteArray();
     }
-    
+
     public static int getFogBlendColour(World world, float partialRenderTick, int playerX, int playerZ)
     {
         int distance = Minecraft.getMinecraft().gameSettings.fancyGraphics ? ForgeDummyContainer.blendRanges[Minecraft.getMinecraft().gameSettings.renderDistance] : 0;
