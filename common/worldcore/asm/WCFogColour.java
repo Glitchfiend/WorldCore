@@ -132,11 +132,9 @@ public class WCFogColour implements IClassTransformer
         int g = 0;
         int b = 0;
         
-        float celestialAngle = world.getCelestialAngle(partialRenderTick);
-        
-        int wr = (int)(world.provider.getFogColor(celestialAngle, partialRenderTick).xCoord * 255);
-        int wg = (int)(world.provider.getFogColor(celestialAngle, partialRenderTick).yCoord * 255);
-        int wb = (int)(world.provider.getFogColor(celestialAngle, partialRenderTick).zCoord * 255);
+        int wr = (int)(world.getFogColor(partialRenderTick).xCoord * 255);
+        int wg = (int)(world.getFogColor(partialRenderTick).yCoord * 255);
+        int wb = (int)(world.getFogColor(partialRenderTick).zCoord * 255);
         
         int defaultcolour = (wr << 16) + (wg << 8) + (wb);
         int divider = 0;
@@ -152,10 +150,6 @@ public class WCFogColour implements IClassTransformer
                 {
                     colour = ((IWCFog)biome).getFogColour();
                 }
-                else
-                {
-                    colour = defaultcolour;
-                }
                     
                 r += (colour & 0xFF0000) >> 16;
                 g += (colour & 0x00FF00) >> 8;
@@ -163,6 +157,8 @@ public class WCFogColour implements IClassTransformer
                 divider++;
             }
         }
+        
+        float celestialAngle = world.getCelestialAngle(partialRenderTick);
         
         float celestialAngleMultiplier = MathHelper.cos(celestialAngle * (float)Math.PI * 2.0F) * 2.0F + 0.5F;
 
@@ -182,7 +178,7 @@ public class WCFogColour implements IClassTransformer
 
         int multiplier = (r / divider & 255) << 16 | (g / divider & 255) << 8 | b / divider & 255;
 
-        return multiplier;
+        return multiplier == 0 ? defaultcolour : multiplier;
     }
     
     public static Vec3 getFogVec(Entity entity, World world, float partialRenderTick)
