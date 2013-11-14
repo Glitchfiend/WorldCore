@@ -167,8 +167,6 @@
 			</fileset>
 		</jar>
     	
-    	<echo message="Renaming WorldCore Changelog" />
-        <move file="changelog.txt" tofile="${dist.dir}/${changelog.name}"/>
 	</target>
 
 	<target name="build">
