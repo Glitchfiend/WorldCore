@@ -150,6 +150,7 @@ public class WCFogColour implements IClassTransformer
                 {
                     colour = ((IWCFog)biome).getFogColour();
                 }
+                else colour = defaultcolour;
                     
                 r += (colour & 0xFF0000) >> 16;
                 g += (colour & 0x00FF00) >> 8;
