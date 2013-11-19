@@ -3,12 +3,14 @@ package worldcore.asm;
 import java.io.File;
 import java.util.Map;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 
 @TransformerExclusions({ "worldcore.asm" })
 public class WCFMLLoadingPlugin implements IFMLLoadingPlugin
 {
+    private static String SIDE = FMLLaunchHandler.side().name();
     public static File location;
     
     @Override
@@ -20,7 +22,12 @@ public class WCFMLLoadingPlugin implements IFMLLoadingPlugin
     @Override
     public String[] getASMTransformerClass()
     {
-        return new String[] {WCFogColour.class.getName(), WCFogDistance.class.getName()};
+        if (SIDE.equals("CLIENT"))
+        {
+            return new String[] {WCFogColour.class.getName(), WCFogDistance.class.getName()};
+        }
+
+        return null;
     }
 
     @Override
