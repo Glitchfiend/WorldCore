@@ -81,16 +81,12 @@ public class WCDimensionLight implements IClassTransformer
 
                                 if (fieldInsnNode.getOpcode() == GETFIELD && (fieldInsnNode.name.equals("provider") || fieldInsnNode.name.equals("t")))
                                 {
-                                    System.out.println("Found provider");
-                                    
                                     if (fieldInsnNode.getNext() instanceof FieldInsnNode)
                                     {
                                         FieldInsnNode fieldInsnNode2 = (FieldInsnNode)fieldInsnNode.getNext();
                                         
-                                        if (fieldInsnNode2.getOpcode() == GETFIELD && (fieldInsnNode2.name.equals("dimensionId") || fieldInsnNode.name.equals("i")))
+                                        if (fieldInsnNode2.getOpcode() == GETFIELD && (fieldInsnNode2.name.equals("dimensionId") || fieldInsnNode2.name.equals("i")))
                                         {         
-                                            System.out.println("Found dimensionId");
-                                            
                                             InsnList toInject = new InsnList();
 
                                             toInject.add(new VarInsnNode(ALOAD, 2));
