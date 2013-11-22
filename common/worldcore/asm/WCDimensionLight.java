@@ -81,12 +81,16 @@ public class WCDimensionLight implements IClassTransformer
 
                                 if (fieldInsnNode.getOpcode() == GETFIELD && (fieldInsnNode.name.equals("provider") || fieldInsnNode.name.equals("t")))
                                 {
+                                    System.out.println("Found provider");
+                                    
                                     if (fieldInsnNode.getNext() instanceof FieldInsnNode)
                                     {
                                         FieldInsnNode fieldInsnNode2 = (FieldInsnNode)fieldInsnNode.getNext();
                                         
                                         if (fieldInsnNode2.getOpcode() == GETFIELD && (fieldInsnNode2.name.equals("dimensionId") || fieldInsnNode.name.equals("i")))
                                         {         
+                                            System.out.println("Found dimensionId");
+                                            
                                             InsnList toInject = new InsnList();
 
                                             toInject.add(new VarInsnNode(ALOAD, 2));
@@ -97,7 +101,7 @@ public class WCDimensionLight implements IClassTransformer
                                             toInject.add(new VarInsnNode(FLOAD, 12));
                                             toInject.add(new VarInsnNode(FLOAD, 13));
                                             if (obfuscated)
-                                                toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCDimensionLight", "getAmbientLightingValues", "(Lbda;FFFFFF)[Ljava/lang/Object;"));
+                                                toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCDimensionLight", "getAmbientLightingValues", "(Lbdd;FFFFFF)[Ljava/lang/Object;"));
                                             else
                                                 toInject.add(new MethodInsnNode(INVOKESTATIC, "worldcore/asm/WCDimensionLight", "getAmbientLightingValues", "(Lnet/minecraft/client/multiplayer/WorldClient;FFFFFF)[Ljava/lang/Object;"));                 
                                             toInject.add(new VarInsnNode(ASTORE, 15));
