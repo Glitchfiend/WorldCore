@@ -24,7 +24,7 @@ public class WCFMLLoadingPlugin implements IFMLLoadingPlugin
     {
         if (SIDE.equals("CLIENT"))
         {
-            return new String[] {WCFogColour.class.getName(), WCFogDistance.class.getName()};
+            return new String[] {WCFogColour.class.getName(), WCFogDistance.class.getName(), WCDimensionLight.class.getName()};
         }
 
         return null;
