@@ -34,8 +34,6 @@ import worldcore.interfaces.IWCLighting;
 
 public class WCDimensionLight implements IClassTransformer
 {
-    public static Object[] frameComponents = new Object[] { FLOAT, INTEGER, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT };
-    
     @Override
     public byte[] transform(String name, String newname, byte[] bytes)
     {
@@ -65,7 +63,7 @@ public class WCDimensionLight implements IClassTransformer
         {
             ListIterator iterator;
 
-            if ((methodNode.name.equals("updateLightmap")) || (methodNode.name.equals("a")))
+            if (methodNode.name.equals("updateLightmap") || methodNode.name.equals("h"))
             {
                 for (iterator = methodNode.instructions.iterator(); iterator.hasNext();) 
                 {
@@ -81,13 +79,13 @@ public class WCDimensionLight implements IClassTransformer
                             {
                                 FieldInsnNode fieldInsnNode = (FieldInsnNode)varInsnNode.getNext();
 
-                                if (fieldInsnNode.getOpcode() == GETFIELD && fieldInsnNode.name.equals("provider") || fieldInsnNode.name.equals("t"))
+                                if (fieldInsnNode.getOpcode() == GETFIELD && (fieldInsnNode.name.equals("provider") || fieldInsnNode.name.equals("t")))
                                 {
                                     if (fieldInsnNode.getNext() instanceof FieldInsnNode)
                                     {
                                         FieldInsnNode fieldInsnNode2 = (FieldInsnNode)fieldInsnNode.getNext();
                                         
-                                        if (fieldInsnNode2.getOpcode() == GETFIELD && fieldInsnNode2.name.equals("dimensionId") || fieldInsnNode.name.equals("i"))
+                                        if (fieldInsnNode2.getOpcode() == GETFIELD && (fieldInsnNode2.name.equals("dimensionId") || fieldInsnNode.name.equals("i")))
                                         {         
                                             InsnList toInject = new InsnList();
 
