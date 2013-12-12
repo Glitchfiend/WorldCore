@@ -13,7 +13,7 @@ public class WCFMLLoadingPlugin implements IFMLLoadingPlugin
     private static String SIDE = FMLLaunchHandler.side().name();
     public static File location;
     
-    @Override
+    /*TODO: Remove in 1.7*/
     public String[] getLibraryRequestClass()
     {
         return null;
