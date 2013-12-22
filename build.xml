@@ -19,7 +19,7 @@
 	<property name="forge.dir" value="${build.dir}/forge" />
 	<property name="mcp.dir" value="${forge.dir}/mcp" />
 
-	<property name="mod.name" value="WorldCore-universal-${mc.version}-${mod.version}.${mod.build}.jar" />
+	<property name="mod.name" value="ZZZZ_WorldCore-universal-${mc.version}-${mod.version}.${mod.build}.jar" />
 	<property name="dev.name" value="WorldCore-dev-${mc.version}-${mod.version}.${mod.build}.jar" />
 	<property name="changelog.name" value="WorldCore-changelog-${mc.version}-${mod.version}.${mod.build}.txt" />
 
